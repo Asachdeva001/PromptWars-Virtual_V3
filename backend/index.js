@@ -37,12 +37,17 @@ export const api = (req, res) => {
       // 1. GET /logs - Fetch all carbon logs
       if (method === 'GET' && path.includes('/logs')) {
         let logsList = [];
-        if (db) {
-          const snapshot = await db.collection('logs').orderBy('timestamp', 'desc').get();
-          snapshot.forEach(doc => {
-            logsList.push({ id: doc.id, ...doc.data() });
-          });
-        } else {
+        try {
+          if (db) {
+            const snapshot = await db.collection('logs').orderBy('timestamp', 'desc').get();
+            snapshot.forEach(doc => {
+              logsList.push({ id: doc.id, ...doc.data() });
+            });
+          } else {
+            logsList = [...memoryDB.logs].sort((a, b) => b.timestamp - a.timestamp);
+          }
+        } catch (dbError) {
+          console.warn("Firestore DB not available, running in-memory fallback:", dbError.message);
           logsList = [...memoryDB.logs].sort((a, b) => b.timestamp - a.timestamp);
         }
         return res.status(200).json({ success: true, logs: logsList });
@@ -66,10 +71,16 @@ export const api = (req, res) => {
         };
 
         let newId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-        if (db) {
-          const docRef = await db.collection('logs').add(logEntry);
-          newId = docRef.id;
-        } else {
+        try {
+          if (db) {
+            const docRef = await db.collection('logs').add(logEntry);
+            newId = docRef.id;
+          } else {
+            logEntry.id = newId;
+            memoryDB.logs.push(logEntry);
+          }
+        } catch (dbError) {
+          console.warn("Firestore DB add failed, running in-memory fallback:", dbError.message);
           logEntry.id = newId;
           memoryDB.logs.push(logEntry);
         }
@@ -85,9 +96,14 @@ export const api = (req, res) => {
           return res.status(400).json({ success: false, error: "Missing log ID" });
         }
 
-        if (db) {
-          await db.collection('logs').doc(logId).delete();
-        } else {
+        try {
+          if (db) {
+            await db.collection('logs').doc(logId).delete();
+          } else {
+            memoryDB.logs = memoryDB.logs.filter(l => l.id !== logId);
+          }
+        } catch (dbError) {
+          console.warn("Firestore DB delete failed, running in-memory fallback:", dbError.message);
           memoryDB.logs = memoryDB.logs.filter(l => l.id !== logId);
         }
         return res.status(200).json({ success: true, message: `Deleted log ${logId}` });
