@@ -20,6 +20,13 @@ const mockStorage = {
 
 const storage = typeof window !== 'undefined' && window.localStorage ? window.localStorage : mockStorage;
 
+// Set up GCP Cloud Function URL mapping
+const API_URL = typeof window !== 'undefined' 
+  ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:8080' 
+      : 'https://us-central1-greenpulse-ai.cloudfunctions.net/api')
+  : null;
+
 const DEFAULT_STATE = {
   profile: {
     name: 'Eco Citizen',
@@ -41,6 +48,24 @@ class StateStore {
   constructor() {
     this.listeners = new Set();
     this.load();
+    this.syncWithGCP();
+  }
+
+  /**
+   * Asynchronously sync logs with GCP Firestore backend
+   */
+  async syncWithGCP() {
+    if (!API_URL) return;
+    try {
+      const response = await fetch(`${API_URL}/logs`);
+      const data = await response.json();
+      if (data && data.success && data.logs) {
+        this.state.logs = data.logs;
+        this.save();
+      }
+    } catch (err) {
+      console.log("GCP Firestore API offline/unconfigured, running in LocalStorage database fallback mode.");
+    }
   }
 
   /**
@@ -119,8 +144,10 @@ class StateStore {
    */
   addLog({ category, subcategory, rawValue, carbon, notes = '' }) {
     const today = new Date().toISOString().split('T')[0];
+    const tempId = 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    
     const log = {
-      id: 'log_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+      id: tempId,
       timestamp: Date.now(),
       date: today,
       category,
@@ -133,6 +160,27 @@ class StateStore {
     this.state.logs.push(log);
     this.updateStreak(today);
     this.save();
+
+    // Async sync to GCP Firestore Cloud Function
+    if (API_URL) {
+      fetch(`${API_URL}/logs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(log)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.id) {
+          const index = this.state.logs.findIndex(l => l.id === tempId);
+          if (index !== -1) {
+            this.state.logs[index].id = data.id;
+            this.save();
+          }
+        }
+      })
+      .catch(err => console.warn("Failed to sync log to Firestore:", err.message));
+    }
+
     return log;
   }
 
@@ -143,6 +191,14 @@ class StateStore {
   deleteLog(id) {
     this.state.logs = this.state.logs.filter(log => log.id !== id);
     this.save();
+
+    // Async deletion from GCP Firestore Cloud Function
+    if (API_URL) {
+      fetch(`${API_URL}/logs/${id}`, {
+        method: 'DELETE'
+      })
+      .catch(err => console.warn("Failed to delete log from Firestore:", err.message));
+    }
   }
 
   /**

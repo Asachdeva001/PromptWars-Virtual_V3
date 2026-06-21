@@ -1,0 +1,18 @@
+{
+  "name": "greenpulse-backend",
+  "version": "1.0.0",
+  "description": "GCP Cloud Functions backend for GreenPulse AI",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "functions-framework --target=api"
+  },
+  "dependencies": {
+    "@google-cloud/vertexai": "^1.1.0",
+    "@google-cloud/firestore": "^7.8.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "@google-cloud/functions-framework": "^3.4.0"
+  }
+}

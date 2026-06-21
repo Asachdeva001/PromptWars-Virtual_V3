@@ -42,15 +42,47 @@ export class ChatAssistantComponent {
     }
   }
 
-  /**
-   * Processes a user statement, appends it to history, and runs NLP intent mapping.
-   * @param {string} text - User message input
-   */
   processUserMessage(text) {
     this.appendMessage('user', text);
     
-    // Process using parser logic
+    // Process using parser logic first
     const parseResult = parseNaturalLanguage(text);
+    
+    // If the intent is unknown, route conversational chat to Vertex AI on GCP
+    if (parseResult.intent === 'unknown') {
+      const API_URL = typeof window !== 'undefined' 
+        ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:8080/chat' 
+            : 'https://us-central1-greenpulse-ai.cloudfunctions.net/api/chat')
+        : null;
+
+      if (API_URL) {
+        // Extract chat history context
+        const msgDivs = Array.from(this.chatHistory.querySelectorAll('.chat-msg'));
+        const chatHistoryList = msgDivs.map(msg => ({
+          sender: msg.classList.contains('user') ? 'user' : 'bot',
+          text: msg.querySelector('p').textContent
+        })).slice(-8); // Limit to last 8 turns
+
+        fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, history: chatHistoryList })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.success && data.reply) {
+            this.appendMessage('bot', data.reply);
+          } else {
+            this.handleParserResult(parseResult);
+          }
+        })
+        .catch(() => {
+          this.handleParserResult(parseResult);
+        });
+        return;
+      }
+    }
     
     // Simulate AI thinking delay for high-fidelity experience
     setTimeout(() => {
