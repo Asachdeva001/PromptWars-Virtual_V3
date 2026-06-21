@@ -53,7 +53,7 @@ export class ChatAssistantComponent {
       const API_URL = typeof window !== 'undefined' 
         ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:8080/chat' 
-            : 'https://us-central1-greenpulse-ai.cloudfunctions.net/api/chat')
+            : 'https://us-central1-virtuprompt.cloudfunctions.net/api/chat')
         : null;
 
       if (API_URL) {

@@ -24,7 +24,7 @@ const storage = typeof window !== 'undefined' && window.localStorage ? window.lo
 const API_URL = typeof window !== 'undefined' 
   ? (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:8080' 
-      : 'https://us-central1-greenpulse-ai.cloudfunctions.net/api')
+      : 'https://us-central1-virtuprompt.cloudfunctions.net/api')
   : null;
 
 const DEFAULT_STATE = {
