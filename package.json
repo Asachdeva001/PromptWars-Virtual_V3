@@ -1,0 +1,11 @@
+{
+  "name": "greenpulse-ai",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "GreenPulse AI - Carbon Footprint Awareness Platform",
+  "scripts": {
+    "test": "node tests/run.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
