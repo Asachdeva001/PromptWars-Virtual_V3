@@ -101,6 +101,35 @@ python -m http.server 8080
 ```
 Then open `http://localhost:8080` in your browser.
 
+### Deploying to GCP
+
+#### 1. Deploy the Frontend (Google App Engine)
+Using our App Engine configuration [app.yaml](file:///d:/Challenge_3/app.yaml), you can deploy the static SPA client instantly:
+```bash
+# Log in to your GCP account
+gcloud auth login
+
+# Set your active GCP project
+gcloud config set project <YOUR_GCP_PROJECT_ID>
+
+# Deploy the application to GAE
+gcloud app deploy
+```
+
+#### 2. Deploy the Backend (Google Cloud Functions)
+You can deploy the backend code in the [backend/](file:///d:/Challenge_3/backend/) directory as a serverless Cloud Function:
+```bash
+cd backend
+
+# Deploy to Cloud Functions with an HTTP trigger and Node.js runtime
+gcloud functions deploy api \
+  --runtime=nodejs22 \
+  --trigger-http \
+  --allow-unauthenticated \
+  --entry-point=api \
+  --region=us-central1
+```
+
 ### Running Automated Tests
 We use Node.js's native test runner (available in Node v18+ and stable in v22).
 To run the 16 unit assertions checking calculators, state manager, and parser:
