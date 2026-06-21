@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GreenPulse AI - Track, reduce, and offset your carbon footprint using a conversational AI assistant.">
+  <title>GreenPulse AI - Carbon Footprint Tracker & Assistant</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Accessible Skip Navigation Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="app-container">
+    
+    <!-- Glowing background decorative orbs -->
+    <div class="glow-orb orb-1" aria-hidden="true"></div>
+    <div class="glow-orb orb-2" aria-hidden="true"></div>
+
+    <!-- App Header & Navigation Landmark -->
+    <header class="app-header">
+      <div class="logo-section">
+        <!-- SVG Leaf Pulse Icon -->
+        <svg class="logo-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M17 8C14.24 8 12 10.24 12 13C12 13.57 12.1 14.11 12.28 14.62L17 9.9V8M2 22V20C2 15.58 5.58 12 10 12C10.57 12 11.11 12.1 11.62 12.28L2 21.9V22M12 2C6.48 2 2 6.48 2 12C2 14.31 2.78 16.44 4.09 18.15L20.15 2.09C18.44 2.78 16.31 2 12 2M22 2V4C22 8.42 18.42 12 14 12C13.43 12 12.89 11.9 12.38 11.72L22 2.1V2Z"/>
+        </svg>
+        <span class="logo-text">GreenPulse AI</span>
+      </div>
+
+      <nav class="main-nav" aria-label="Main navigation tabs">
+        <button class="nav-btn active" data-view="dashboard" id="nav-dashboard">Dashboard</button>
+        <button class="nav-btn" data-view="tracker" id="nav-tracker">Track Footprint</button>
+        <button class="nav-btn" data-view="scanner" id="nav-scanner">Scan Product</button>
+        <button class="nav-btn" data-view="rewards" id="nav-rewards">Challenges & Rewards</button>
+      </nav>
+
+      <div class="user-quick-stats" aria-label="Points and streak stats">
+        <!-- Streak pill -->
+        <div class="stat-pill" id="quick-streak" title="Daily logging streak">
+          <span class="icon" aria-hidden="true">🔥</span>
+          <span id="streak-count">0</span> Day Streak
+        </div>
+        <!-- Points pill -->
+        <div class="stat-pill points-active" id="quick-points" title="Accumulated Eco Points">
+          <span class="icon" aria-hidden="true">🍃</span>
+          <span id="points-count">0</span> Eco Points
+        </div>
+      </div>
+    </header>
+
+    <!-- Two-Column Main Layout Grid -->
+    <div class="main-layout">
+      
+      <!-- Primary View Section Landmark -->
+      <main id="main-content" aria-label="Platform Views">
+        
+        <!-- 1. DASHBOARD VIEW PANEL -->
+        <section id="view-dashboard" class="view-panel active" aria-labelledby="heading-dashboard">
+          <h2 class="sr-only" id="heading-dashboard">User Carbon Dashboard</h2>
+          
+          <div class="dashboard-grid">
+            
+            <!-- Carbon Score Radial Gauge Card -->
+            <div class="glass-card score-card" aria-live="polite">
+              <h3>Personal Carbon Score</h3>
+              <div class="radial-gauge-container">
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                  <defs>
+                    <linearGradient id="gauge-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#10b981" />
+                      <stop offset="100%" stop-color="#06b6d4" />
+                    </linearGradient>
+                  </defs>
+                  <circle class="gauge-bg" cx="100" cy="100" r="90" />
+                  <circle class="gauge-fill" id="dashboard-gauge-fill" cx="100" cy="100" r="90" />
+                </svg>
+                <div class="gauge-center-text">
+                  <span class="score-number" id="dashboard-score-val">0</span>
+                  <span class="score-label">kg CO2e / yr</span>
+                </div>
+              </div>
+              <p id="dashboard-gauge-desc" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
+                You are currently tracking below your annual goal of 3,000 kg.
+              </p>
+            </div>
+
+            <!-- Category Emissions Bar Chart Card -->
+            <div class="glass-card charts-card">
+              <h3>Emission Breakdown</h3>
+              <div class="bar-chart-container" id="category-chart" aria-label="Category emissions horizontal bar charts">
+                <!-- Travel Row -->
+                <div class="chart-row">
+                  <span class="chart-category">Travel</span>
+                  <div class="bar-wrapper">
+                    <div class="bar-fill travel" id="bar-travel" style="width: 0%;"></div>
+                  </div>
+                  <span class="chart-value" id="val-travel">0.0 kg</span>
+                </div>
+                <!-- Energy Row -->
+                <div class="chart-row">
+                  <span class="chart-category">Energy</span>
+                  <div class="bar-wrapper">
+                    <div class="bar-fill energy" id="bar-energy" style="width: 0%;"></div>
+                  </div>
+                  <span class="chart-value" id="val-energy">0.0 kg</span>
+                </div>
+                <!-- Diet Row -->
+                <div class="chart-row">
+                  <span class="chart-category">Diet</span>
+                  <div class="bar-wrapper">
+                    <div class="bar-fill diet" id="bar-diet" style="width: 0%;"></div>
+                  </div>
+                  <span class="chart-value" id="val-diet">0.0 kg</span>
+                </div>
+                <!-- Shopping Row -->
+                <div class="chart-row">
+                  <span class="chart-category">Shopping</span>
+                  <div class="bar-wrapper">
+                    <div class="bar-fill shopping" id="bar-shopping" style="width: 0%;"></div>
+                  </div>
+                  <span class="chart-value" id="val-shopping">0.0 kg</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Regional Comparison Card -->
+          <div class="glass-card">
+            <h3>How You Compare</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+              Your annual projected carbon footprint compared to standard regional averages.
+            </p>
+            <div class="bar-chart-container" id="benchmark-chart" aria-label="Regional footprint comparison chart">
+              <!-- Dynamically populated comparison bars -->
+            </div>
+          </div>
+
+          <!-- Historical Logging List Card -->
+          <div class="glass-card logs-card">
+            <h3>Recent Footprint Logs</h3>
+            <div class="logs-table-wrapper">
+              <table class="logs-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Category</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Emissions</th>
+                    <th scope="col" style="text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="logs-list-body">
+                  <!-- Log entries will be rendered here dynamically -->
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted);">No entries logged yet. Try logging via the AI assistant or forms tab!</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- 2. TRACKER VIEW PANEL (MANUAL CALCULATORS) -->
+        <section id="view-tracker" class="view-panel" aria-labelledby="heading-tracker">
+          <h2 id="heading-tracker">Log Carbon Activities</h2>
+          <p style="color: var(--text-muted); margin-bottom: 20px;">Select a category below to calculate and log carbon emissions manually.</p>
+          
+          <div class="tracker-form-grid">
+            
+            <!-- Travel Calculator Card -->
+            <div class="glass-card">
+              <h3>✈️ Travel Footprint</h3>
+              <form id="form-travel" style="margin-top: 15px;">
+                <div class="form-group">
+                  <label for="travel-mode">Mode of Transport</label>
+                  <select id="travel-mode" class="form-control" required>
+                    <option value="car-petrol">Petrol Car</option>
+                    <option value="car-diesel">Diesel Car</option>
+                    <option value="car-hybrid">Hybrid Car</option>
+                    <option value="car-electric">Electric Car</option>
+                    <option value="motorcycle">Motorcycle</option>
+                    <option value="bus">Public Bus</option>
+                    <option value="train">Train / Metro</option>
+                    <option value="flight-domestic">Short Flight (&lt; 600km)</option>
+                    <option value="flight-intl">International Flight</option>
+                    <option value="walk-bike">Walking / Bicycling</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="travel-distance">Distance Traveled</label>
+                  <input type="number" id="travel-distance" class="form-control" placeholder="Enter distance" min="0" step="0.1" required>
+                </div>
+                <div class="form-group">
+                  <label for="travel-unit">Distance Unit</label>
+                  <select id="travel-unit" class="form-control">
+                    <option value="km">Kilometers (km)</option>
+                    <option value="mi">Miles (mi)</option>
+                  </select>
+                </div>
+                
+                <div class="preview-footprint-box">
+                  <span>Carbon Impact:</span>
+                  <span class="preview-number" id="travel-preview-val">0.00 kg CO2e</span>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 15px;">Log Travel Activity</button>
+              </form>
+            </div>
+
+            <!-- Energy Calculator Card -->
+            <div class="glass-card">
+              <h3>⚡ Home Energy</h3>
+              <form id="form-energy" style="margin-top: 15px;">
+                <div class="form-group">
+                  <label for="energy-type">Energy Source</label>
+                  <select id="energy-type" class="form-control" required>
+                    <option value="electricity-grid">Standard Grid Electricity</option>
+                    <option value="electricity-green">Green Renewable Electricity</option>
+                    <option value="gas-heating">Natural Gas Heating</option>
+                    <option value="oil-heating">Heating Fuel Oil</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="energy-val">Quantity Consumed</label>
+                  <input type="number" id="energy-val" class="form-control" placeholder="Enter kWh or Liters" min="0" step="0.1" required>
+                </div>
+                <div class="form-group">
+                  <label for="energy-unit">Quantity Unit</label>
+                  <select id="energy-unit" class="form-control">
+                    <option value="kwh">Kilowatt Hours (kWh)</option>
+                    <option value="liters">Liters (for Heating Oil)</option>
+                    <option value="gallons">Gallons (for Heating Oil)</option>
+                  </select>
+                </div>
+
+                <div class="preview-footprint-box">
+                  <span>Carbon Impact:</span>
+                  <span class="preview-number" id="energy-preview-val">0.00 kg CO2e</span>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 15px;">Log Energy Usage</button>
+              </form>
+            </div>
+
+            <!-- Diet Calculator Card -->
+            <div class="glass-card">
+              <h3>🍔 Food & Diet</h3>
+              <form id="form-diet" style="margin-top: 15px;">
+                <div class="form-group">
+                  <label for="diet-type">Diet Intake Category</label>
+                  <select id="diet-type" class="form-control" required>
+                    <option value="beef-lamb">Beef / Red Meat Serving</option>
+                    <option value="pork-poultry">Pork / Chicken Serving</option>
+                    <option value="fish-seafood">Fish / Seafood Serving</option>
+                    <option value="dairy-cheese">Dairy / Cheese Serving</option>
+                    <option value="vegetarian">Vegetarian Meal</option>
+                    <option value="vegan">Vegan Meal</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="diet-servings">Servings Quantity</label>
+                  <input type="number" id="diet-servings" class="form-control" placeholder="Number of servings/meals" min="0" step="0.1" required>
+                </div>
+
+                <div class="preview-footprint-box">
+                  <span>Carbon Impact:</span>
+                  <span class="preview-number" id="diet-preview-val">0.00 kg CO2e</span>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 15px;">Log Diet Activity</button>
+              </form>
+            </div>
+
+            <!-- Shopping Calculator Card -->
+            <div class="glass-card">
+              <h3>🛍️ Consumption & Shopping</h3>
+              <form id="form-shopping" style="margin-top: 15px;">
+                <div class="form-group">
+                  <label for="shopping-cat">Item Category</label>
+                  <select id="shopping-cat" class="form-control" required>
+                    <option value="electronics">Electronics / Devices</option>
+                    <option value="clothing">Clothing / Footwear</option>
+                    <option value="furniture">Furniture / Decor</option>
+                    <option value="other-goods">Other Household Goods</option>
+                    <option value="services">Services / Software Subscriptions</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="shopping-spend">Spend Amount (USD)</label>
+                  <input type="number" id="shopping-spend" class="form-control" placeholder="Enter dollar spend" min="0" required>
+                </div>
+
+                <div class="preview-footprint-box">
+                  <span>Carbon Impact:</span>
+                  <span class="preview-number" id="shopping-preview-val">0.00 kg CO2e</span>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top: 15px;">Log Shopping Activity</button>
+              </form>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- 3. PRODUCT SCANNER VIEW PANEL -->
+        <section id="view-scanner" class="view-panel" aria-labelledby="heading-scanner">
+          <h2 id="heading-scanner">Environmental Product Scanner</h2>
+          <p style="color: var(--text-muted); margin-bottom: 20px;">
+            Search barcodes or simulate visual scanning of commercial consumer goods to evaluate eco-efficiency rating grades.
+          </p>
+
+          <div class="scanner-grid">
+            
+            <!-- Virtual Camera Viewport -->
+            <div class="glass-card" style="display: flex; flex-direction: column; gap: 20px;">
+              <h3>Live Scanner Viewport</h3>
+              <div class="mock-camera-viewport" id="scanner-camera-view">
+                <div class="scanner-laser" id="scanner-laser-bar"></div>
+                <div class="scanner-overlay-brackets"></div>
+                <span id="scanner-viewport-text">Point camera at a barcode</span>
+              </div>
+              
+              <!-- Search Bar for direct catalog lookups -->
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="scanner-search-select">Simulate Scanning / Search Product</label>
+                <select id="scanner-search-select" class="form-control">
+                  <option value="">-- Choose a product to simulate scan --</option>
+                  <!-- Dynamically populated from products database -->
+                </select>
+              </div>
+            </div>
+
+            <!-- Scan Result Display -->
+            <div class="glass-card product-result-panel" id="scanner-result-card">
+              <h3>Scan Results</h3>
+              <div id="scanner-empty-state" style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+                <svg viewBox="0 0 24 24" style="width: 64px; height: 64px; fill: rgba(255,255,255,0.05); margin-bottom: 15px;">
+                  <path d="M4 4h4v2H4v4H2V4c0-1.1.9-2 2-2h4v2H4zM2 20v-6h2v4h4v2H4c-1.1 0-2-.9-2-2zM20 20h-4v-2h4v-4h2v6c0 1.1-.9 2-2 2zm2-16v6h-2V6h-4V4h4c1.1 0 2 .9 2 2zM3 11h18v2H3v-2z"/>
+                </svg>
+                <p>Select a product on the left to simulate a barcode camera scan.</p>
+              </div>
+
+              <!-- Dynamically populated scanner results details -->
+              <div id="scanner-results-data" style="display: none; flex-direction: column; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                  <div class="impact-grade-badge" id="scan-grade-badge">E</div>
+                  <div>
+                    <h4 id="scan-product-name" style="font-size: 1.25rem;">Beef Burger Patty</h4>
+                    <span id="scan-carbon-footprint" style="font-weight: 700; color: var(--color-danger);">7.20 kg CO2e</span>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Life-Cycle Impact Analysis</label>
+                  <p id="scan-lifecycle-desc" style="font-size: 0.9rem; color: var(--text-muted);"></p>
+                </div>
+
+                <!-- Green swap alternatives card -->
+                <div class="swap-comparison-card" id="scan-swap-card">
+                  <div class="swap-comparison-header">💡 Recomended Eco-Alternative Swap</div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 8px;">
+                    <div>
+                      <h4 id="scan-swap-name" style="color: var(--text-primary); font-size: 0.95rem;">Beyond Burger Patty</h4>
+                      <p id="scan-swap-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;"></p>
+                    </div>
+                    <div class="impact-grade-badge grade-A" id="scan-swap-badge" style="width: 38px; height: 38px; font-size: 1.2rem;">A</div>
+                  </div>
+                  <div style="font-size: 0.85rem; font-weight: 600; color: var(--color-primary); margin-top: 5px;">
+                    Saves: <span id="scan-saving-val">6.75 kg CO2e (-93%)</span>
+                  </div>
+                  <button class="btn-swap" id="btn-scan-log-swap">Log Swap alternative instead</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- 4. CHALLENGES & REWARDS VIEW PANEL -->
+        <section id="view-rewards" class="view-panel" aria-labelledby="heading-rewards">
+          <h2 id="heading-rewards">Streaks, Challenges & Rewards</h2>
+          <p style="color: var(--text-muted); margin-bottom: 20px;">
+            Join weekly challenges, build streaks, earn points, and redeem them for real environmental offsets or products.
+          </p>
+
+          <div class="gamification-container">
+            
+            <!-- Left Side: Challenges & Leaderboard -->
+            <div style="display: flex; flex-direction: column; gap: 30px;">
+              
+              <!-- Challenges List -->
+              <div class="glass-card">
+                <h3>Active Eco-Challenges</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                  Complete challenges to earn points and level up your rating.
+                </p>
+                <div class="challenges-list" id="challenges-list-container">
+                  <!-- Dynamically populated from JS -->
+                </div>
+              </div>
+
+              <!-- Leaderboard Widget -->
+              <div class="glass-card leaderboard-widget">
+                <h3>Regional Eco-Leaderboard</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                  See how you rank against local peers this week.
+                </p>
+                <div class="leaderboard-list" id="leaderboard-list-container">
+                  <!-- Dynamically populated from JS -->
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Right Side: Rewards Shop -->
+            <div class="glass-card">
+              <h3>Rewards Store</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+                Spend your earned Eco Points on real offsets or physical merchandise discount coupons.
+              </p>
+              <div class="rewards-shop-grid" id="rewards-shop-container">
+                <!-- Dynamically populated from JS -->
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Sidebar Conversational Assistant Landmark -->
+      <aside class="sidebar-assistant glass-card" aria-label="GreenPulse AI Conversational Assistant">
+        
+        <!-- Assistant Status Header -->
+        <div class="assistant-header">
+          <div class="bot-avatar" aria-hidden="true">🤖</div>
+          <div class="bot-status">
+            <span class="bot-name">GreenPulse Eco-AI</span>
+            <span class="bot-subtext">Online &bull; Smart Assistant</span>
+          </div>
+        </div>
+
+        <!-- Conversational Log History viewport -->
+        <div class="chat-history" id="chat-history" aria-live="polite">
+          <div class="chat-msg bot">
+            <p>Hello! I am your conversational GreenPulse AI assistant. You can write messages naturally to log activities, ask eco-questions, or review scores.</p>
+            <p>Try saying: <strong>"I rode my bicycle 5 km today"</strong> or <strong>"I ate beef lamb dinner"</strong>.</p>
+          </div>
+        </div>
+
+        <!-- Interactive quick suggestion chips -->
+        <div class="suggestion-chips-container" id="chat-suggestion-chips" aria-label="Quick response prompt choices">
+          <button class="chip-btn" data-input="I drove 15 miles in my petrol car">🚗 Log Car Drive</button>
+          <button class="chip-btn" data-input="I ate vegetarian lunch today">🥗 Log Vegetarian Meal</button>
+          <button class="chip-btn" data-input="what is my carbon score?">📊 View Score</button>
+          <button class="chip-btn" data-input="help">❓ Show Help</button>
+        </div>
+
+        <!-- Chat Form Controls -->
+        <form id="chat-input-form" class="chat-input-wrapper">
+          <input type="text" id="chat-textbox" class="chat-textbox" placeholder="Type a message to calculate/log..." aria-label="Enter conversational input to chat assistant" autocomplete="off" required>
+          <button type="submit" class="chat-send-btn" id="chat-send" aria-label="Send message">
+            <!-- Send Arrow SVG -->
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: var(--bg-darkest);" aria-hidden="true">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </form>
+
+      </aside>
+
+    </div>
+
+  </div>
+
+  <!-- Load dynamic components & application scripts -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>
