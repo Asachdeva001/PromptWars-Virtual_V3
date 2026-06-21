@@ -5,6 +5,7 @@
 
 import { parseNaturalLanguage } from '../parser.js';
 import { store } from '../state.js';
+import { POINTS_CHAT_LOG } from '../constants.js';
 
 export class ChatAssistantComponent {
   constructor() {
@@ -128,8 +129,10 @@ export class ChatAssistantComponent {
 
   /**
    * Appends a standard text bubble to history.
+   * Bold markdown (**text**) is converted to <strong> tags.
+   * All other content is safely escaped to prevent XSS.
    * @param {string} sender - 'user' or 'bot'
-   * @param {string} text - Text message markup
+   * @param {string} text - Text message, supports **bold** markdown syntax
    */
   appendMessage(sender, text) {
     if (!this.chatHistory) return;
@@ -137,18 +140,35 @@ export class ChatAssistantComponent {
     const bubble = document.createElement('div');
     bubble.className = `chat-msg ${sender}`;
     
-    // Process markdown-like bolding **text** to html strong tags
-    let htmlContent = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Process list points
-    htmlContent = htmlContent.replace(/\n/g, '<br>');
+    // Safely escape raw text, then restore intentional markdown-to-HTML transforms
+    const escaped = this.escapeHTML(String(text));
+    // Process **bold** → <strong>, newlines → <br>
+    const htmlContent = escaped
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
     
-    bubble.innerHTML = `<p>${htmlContent}</p>`;
+    const p = document.createElement('p');
+    p.innerHTML = htmlContent;
+    bubble.appendChild(p);
     this.chatHistory.appendChild(bubble);
     this.scrollChatToBottom();
   }
 
   /**
+   * Escapes a plain-text string for safe insertion into innerHTML.
+   * Prevents XSS when rendering user-originated or external data.
+   * @param {string} str - Raw string
+   * @returns {string} HTML-escaped string
+   */
+  escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  /**
    * Appends an interactive confirmation card for logs.
+   * Uses role="alert" so screen readers immediately announce the pending log.
    * @param {Object} logData - Parsed logging metadata
    */
   appendConfirmationCard(logData) {
@@ -158,18 +178,22 @@ export class ChatAssistantComponent {
     const bubble = document.createElement('div');
     bubble.className = 'chat-msg bot';
     bubble.id = cardId;
+    bubble.setAttribute('role', 'alert');
+    bubble.setAttribute('aria-live', 'assertive');
+    bubble.setAttribute('aria-atomic', 'true');
 
-    const friendlyMode = logData.subcategory.replace('-', ' ');
+    // Replace ALL dashes with spaces for a human-readable mode label
+    const friendlyMode = logData.subcategory.replace(/-/g, ' ');
     
     bubble.innerHTML = `
       <p>📝 <strong>Activity Detected:</strong></p>
-      <p>I calculated emissions for <strong>${friendlyMode}</strong> (${logData.rawValue} ${logData.unit}):</p>
+      <p>I calculated emissions for <strong>${this.escapeHTML(friendlyMode)}</strong> (${logData.rawValue} ${this.escapeHTML(logData.unit)}):</p>
       <p style="font-weight:700; color:var(--color-accent); font-size:1.05rem;">Footprint: ${logData.carbon.toFixed(2)} kg CO2e</p>
       <div class="chat-confirm-action" id="${cardId}_actions">
         <p style="font-size:0.8rem; color:var(--text-muted);">Would you like to log this activity to your dashboard?</p>
         <div class="confirm-btn-group">
-          <button class="btn-mini confirm" id="${cardId}_btn_ok">Confirm Log</button>
-          <button class="btn-mini cancel" id="${cardId}_btn_cancel">Cancel</button>
+          <button class="btn-mini confirm" id="${cardId}_btn_ok" aria-label="Confirm and log ${this.escapeHTML(friendlyMode)} to dashboard">Confirm Log</button>
+          <button class="btn-mini cancel" id="${cardId}_btn_cancel" aria-label="Cancel logging">Cancel</button>
         </div>
       </div>
     `;
@@ -185,7 +209,7 @@ export class ChatAssistantComponent {
     if (okBtn && cancelBtn && actionsPanel) {
       okBtn.addEventListener('click', () => {
         // Record in store
-        const log = store.addLog({
+        store.addLog({
           category: logData.category,
           subcategory: logData.subcategory,
           rawValue: logData.rawValue,
@@ -194,12 +218,12 @@ export class ChatAssistantComponent {
         });
 
         // Award eco logging points
-        store.state.points += 5;
+        store.state.points += POINTS_CHAT_LOG;
         store.save();
 
         actionsPanel.innerHTML = `
-          <p style="color:var(--color-primary); font-weight:bold; font-size:0.8rem;">
-            ✓ Logged successfully! +5 Eco Points awarded.
+          <p style="color:var(--color-primary); font-weight:bold; font-size:0.8rem;" role="status">
+            ✓ Logged successfully! +${POINTS_CHAT_LOG} Eco Points awarded.
           </p>
         `;
         
@@ -211,7 +235,7 @@ export class ChatAssistantComponent {
 
       cancelBtn.addEventListener('click', () => {
         actionsPanel.innerHTML = `
-          <p style="color:var(--color-danger); font-size:0.8rem;">
+          <p style="color:var(--color-danger); font-size:0.8rem;" role="status">
             ✗ Logging request cancelled.
           </p>
         `;

@@ -28,11 +28,11 @@
         <span class="logo-text">GreenPulse AI</span>
       </div>
 
-      <nav class="main-nav" aria-label="Main navigation tabs">
-        <button class="nav-btn active" data-view="dashboard" id="nav-dashboard">Dashboard</button>
-        <button class="nav-btn" data-view="tracker" id="nav-tracker">Track Footprint</button>
-        <button class="nav-btn" data-view="scanner" id="nav-scanner">Scan Product</button>
-        <button class="nav-btn" data-view="rewards" id="nav-rewards">Challenges & Rewards</button>
+      <nav class="main-nav" aria-label="Main navigation tabs" role="tablist">
+        <button class="nav-btn active" data-view="dashboard" id="nav-dashboard" role="tab" aria-selected="true" aria-controls="view-dashboard">Dashboard</button>
+        <button class="nav-btn" data-view="tracker" id="nav-tracker" role="tab" aria-selected="false" aria-controls="view-tracker">Track Footprint</button>
+        <button class="nav-btn" data-view="scanner" id="nav-scanner" role="tab" aria-selected="false" aria-controls="view-scanner">Scan Product</button>
+        <button class="nav-btn" data-view="rewards" id="nav-rewards" role="tab" aria-selected="false" aria-controls="view-rewards">Challenges &amp; Rewards</button>
       </nav>
 
       <div class="user-quick-stats" aria-label="Points and streak stats">
@@ -151,13 +151,24 @@
                     <th scope="col" style="text-align: right;">Action</th>
                   </tr>
                 </thead>
-                <tbody id="logs-list-body">
+                <tbody id="logs-list-body" aria-live="polite" aria-relevant="additions removals">
                   <!-- Log entries will be rendered here dynamically -->
                   <tr>
                     <td colspan="5" style="text-align: center; color: var(--text-muted);">No entries logged yet. Try logging via the AI assistant or forms tab!</td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Personalised Reduction Insights Card -->
+          <div class="glass-card">
+            <h3>Personalised Reduction Tips</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px;">
+              Targeted suggestions based on your highest-emission category.
+            </p>
+            <div id="dashboard-insights" aria-live="polite" aria-atomic="true">
+              <p style="color: var(--text-muted); font-size: 0.9rem;">Start logging activities to receive personalised reduction tips.</p>
             </div>
           </div>
 
@@ -356,7 +367,7 @@
 
                 <!-- Green swap alternatives card -->
                 <div class="swap-comparison-card" id="scan-swap-card">
-                  <div class="swap-comparison-header">💡 Recomended Eco-Alternative Swap</div>
+                  <div class="swap-comparison-header">💡 Recommended Eco-Alternative Swap</div>
                   <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 8px;">
                     <div>
                       <h4 id="scan-swap-name" style="color: var(--text-primary); font-size: 0.95rem;">Beyond Burger Patty</h4>
@@ -393,7 +404,7 @@
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
                   Complete challenges to earn points and level up your rating.
                 </p>
-                <div class="challenges-list" id="challenges-list-container">
+                <div class="challenges-list" id="challenges-list-container" role="list" aria-live="polite" aria-relevant="additions">
                   <!-- Dynamically populated from JS -->
                 </div>
               </div>
@@ -404,7 +415,7 @@
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
                   See how you rank against local peers this week.
                 </p>
-                <div class="leaderboard-list" id="leaderboard-list-container">
+                <div class="leaderboard-list" id="leaderboard-list-container" aria-live="polite" aria-atomic="true">
                   <!-- Dynamically populated from JS -->
                 </div>
               </div>

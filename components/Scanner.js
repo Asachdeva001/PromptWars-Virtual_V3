@@ -6,6 +6,7 @@
 
 import { PRODUCTS_DB } from '../data.js';
 import { store } from '../state.js';
+import { POINTS_ECO_SWAP, SCANNER_ALIGN_DELAY_MS, SCANNER_DECODE_DELAY_MS } from '../constants.js';
 
 export class ScannerComponent {
   constructor() {
@@ -83,8 +84,8 @@ export class ScannerComponent {
           this.laser.style.backgroundColor = 'rgba(255,255,255,0.05)';
         }
         this.displayProductResults(product);
-      }, 500);
-    }, 450);
+      }, SCANNER_DECODE_DELAY_MS);
+    }, SCANNER_ALIGN_DELAY_MS);
   }
 
   /**
@@ -163,16 +164,16 @@ export class ScannerComponent {
     });
 
     // Reward points for carbon-conscious swap actions
-    store.state.points += 15;
+    store.state.points += POINTS_ECO_SWAP;
     store.save();
 
     // Visual button success indicators
     if (this.swapLogBtn) {
       this.swapLogBtn.disabled = true;
-      this.swapLogBtn.textContent = 'Alternative Logged! +15 Eco Points';
+      this.swapLogBtn.textContent = `Alternative Logged! +${POINTS_ECO_SWAP} Eco Points`;
     }
     if (this.viewportText) {
-      this.viewportText.textContent = 'Success! +15 Eco Points Awarded.';
+      this.viewportText.textContent = `Success! +${POINTS_ECO_SWAP} Eco Points Awarded.`;
     }
 
     // Proactively push a notification alert to the Chat assistant
@@ -180,9 +181,24 @@ export class ScannerComponent {
     if (chatHist) {
       const msgDiv = document.createElement('div');
       msgDiv.className = 'chat-msg bot';
-      msgDiv.innerHTML = `<p>🌱 <strong>Eco Swap Logged!</strong> You swapped <em>${product.name}</em> with <em>${alt.name}</em>, saving **${alt.saving.toFixed(2)} kg CO2e**. I've added <strong>15 Eco Points</strong> to your account!</p>`;
+      msgDiv.setAttribute('role', 'status');
+      const p = document.createElement('p');
+      p.innerHTML = `🌱 <strong>Eco Swap Logged!</strong> You swapped <em>${this.escapeHTML(product.name)}</em> with <em>${this.escapeHTML(alt.name)}</em>, saving <strong>${alt.saving.toFixed(2)} kg CO2e</strong>. I've added <strong>${POINTS_ECO_SWAP} Eco Points</strong> to your account!`;
+      msgDiv.appendChild(p);
       chatHist.appendChild(msgDiv);
       chatHist.scrollTop = chatHist.scrollHeight;
     }
+  }
+
+  /**
+   * Escapes a plain-text string for safe insertion into HTML content.
+   * Prevents XSS when rendering user-originated or external data.
+   * @param {string} str - Raw string
+   * @returns {string} HTML-escaped string
+   */
+  escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = String(str);
+    return div.innerHTML;
   }
 }

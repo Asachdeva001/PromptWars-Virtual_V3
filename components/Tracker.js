@@ -43,14 +43,19 @@ export class TrackerComponent {
       const unit = unitInput.value;
       const co2 = updatePreview();
 
-      if (dist <= 0) return;
+      if (dist <= 0) {
+        distInput.setCustomValidity('Please enter a distance greater than zero.');
+        distInput.reportValidity();
+        return;
+      }
+      distInput.setCustomValidity('');
 
       store.addLog({
         category: 'travel',
         subcategory: mode,
         rawValue: dist,
         carbon: co2,
-        notes: `Travelled ${dist} ${unit} by ${mode.replace('-', ' ')}`
+        notes: `Travelled ${dist} ${unit} by ${mode.replace(/-/g, ' ')}`
       });
 
       form.reset();
@@ -104,14 +109,19 @@ export class TrackerComponent {
       const unit = unitInput.value;
       const co2 = updatePreview();
 
-      if (val <= 0) return;
+      if (val <= 0) {
+        valInput.setCustomValidity('Please enter a quantity greater than zero.');
+        valInput.reportValidity();
+        return;
+      }
+      valInput.setCustomValidity('');
 
       store.addLog({
         category: 'energy',
         subcategory: type,
         rawValue: val,
         carbon: co2,
-        notes: `Used ${val} ${unit} of ${type.replace('-', ' ')}`
+        notes: `Used ${val} ${unit} of ${type.replace(/-/g, ' ')}`
       });
 
       form.reset();
@@ -147,14 +157,19 @@ export class TrackerComponent {
       const servings = parseFloat(servingsInput.value) || 0;
       const co2 = updatePreview();
 
-      if (servings <= 0) return;
+      if (servings <= 0) {
+        servingsInput.setCustomValidity('Please enter a servings count greater than zero.');
+        servingsInput.reportValidity();
+        return;
+      }
+      servingsInput.setCustomValidity('');
 
       store.addLog({
         category: 'diet',
         subcategory: type,
         rawValue: servings,
         carbon: co2,
-        notes: `Consumed ${servings} portion(s) of ${type.replace('-', ' ')}`
+        notes: `Consumed ${servings} portion(s) of ${type.replace(/-/g, ' ')}`
       });
 
       form.reset();
@@ -187,14 +202,19 @@ export class TrackerComponent {
       const spend = parseFloat(spendInput.value) || 0;
       const co2 = updatePreview();
 
-      if (spend <= 0) return;
+      if (spend <= 0) {
+        spendInput.setCustomValidity('Please enter an amount greater than zero.');
+        spendInput.reportValidity();
+        return;
+      }
+      spendInput.setCustomValidity('');
 
       store.addLog({
         category: 'shopping',
         subcategory: cat,
         rawValue: spend,
         carbon: co2,
-        notes: `Spent $${spend} on ${cat.replace('-', ' ')}`
+        notes: `Spent $${spend} on ${cat.replace(/-/g, ' ')}`
       });
 
       form.reset();

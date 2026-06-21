@@ -27,15 +27,20 @@ class App {
 
   /**
    * Sets up SPA tab-switching view panels.
+   * Maintains aria-selected state on nav buttons for screen reader tab role support.
    */
   initSPA() {
     this.navButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const viewName = btn.getAttribute('data-view');
         
-        // Update active nav button
-        this.navButtons.forEach(b => b.classList.remove('active'));
+        // Update active nav button and ARIA selected state
+        this.navButtons.forEach(b => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
         
         // Toggle view panel visibility
         this.viewPanels.forEach(panel => {

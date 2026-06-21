@@ -4,6 +4,14 @@
  * Operates in memory and syncs to localStorage when available.
  */
 
+import {
+  POINTS_BASE_LOG,
+  POINTS_STREAK_MULTIPLIER,
+  POINTS_STREAK_MAX,
+  STORAGE_KEY,
+  DEFAULT_CARBON_GOAL
+} from './constants.js';
+
 // Mock localStorage for Node.js test environment
 const mockStorage = {
   store: {},
@@ -30,7 +38,7 @@ const API_URL = typeof window !== 'undefined'
 const DEFAULT_STATE = {
   profile: {
     name: 'Eco Citizen',
-    carbonGoal: 3000, // Target kg CO2e per year limit
+    carbonGoal: DEFAULT_CARBON_GOAL, // Target kg CO2e per year limit
     region: 'Global Average'
   },
   logs: [], // Array of log objects: { id, timestamp, date, category, subcategory, rawValue, carbon, notes }
@@ -105,7 +113,7 @@ class StateStore {
    */
   save() {
     try {
-      storage.setItem('greenpulse_state', JSON.stringify(this.state));
+      storage.setItem(STORAGE_KEY, JSON.stringify(this.state));
     } catch (err) {
       console.error('Failed to save state to localStorage:', err);
     }
@@ -117,7 +125,7 @@ class StateStore {
    */
   load() {
     try {
-      const data = storage.getItem('greenpulse_state');
+      const data = storage.getItem(STORAGE_KEY);
       if (data) {
         this.state = JSON.parse(data);
       } else {
@@ -215,6 +223,11 @@ class StateStore {
 
   /**
    * Handles daily logging streak checks and increments.
+   * Points awarded on first log of a new day:
+   *   - Consecutive day: POINTS_BASE_LOG + (streakDays × POINTS_STREAK_MULTIPLIER), max POINTS_STREAK_MAX
+   *   - Streak broken: POINTS_BASE_LOG (streak resets to 1)
+   *   - First-ever log: POINTS_BASE_LOG (streak initialised to 1)
+   *   - Same-day repeat: no points, streak unchanged
    * @param {string} todayStr - Today's date string YYYY-MM-DD
    */
   updateStreak(todayStr) {
@@ -224,7 +237,7 @@ class StateStore {
       // First log ever
       this.state.streak.current = 1;
       this.state.streak.lastLoggedDate = todayStr;
-      this.state.points += 10; // Bonus points for starting streak
+      this.state.points += POINTS_BASE_LOG; // Bonus points for starting streak
     } else if (lastLogged === todayStr) {
       // Already logged today, streak does not increment but is maintained
     } else {
@@ -238,14 +251,14 @@ class StateStore {
         // Logged on consecutive day
         this.state.streak.current += 1;
         this.state.streak.lastLoggedDate = todayStr;
-        // Award points based on streak length (10 points + 5 points streak bonus up to max 50 points)
-        const streakBonus = Math.min(this.state.streak.current * 5, 50);
-        this.state.points += 10 + streakBonus;
+        // Award points based on streak length (base + streak bonus up to POINTS_STREAK_MAX)
+        const streakBonus = Math.min(this.state.streak.current * POINTS_STREAK_MULTIPLIER, POINTS_STREAK_MAX);
+        this.state.points += POINTS_BASE_LOG + streakBonus;
       } else {
         // Streak broken
         this.state.streak.current = 1;
         this.state.streak.lastLoggedDate = todayStr;
-        this.state.points += 10;
+        this.state.points += POINTS_BASE_LOG;
       }
     }
   }

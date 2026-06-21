@@ -28,6 +28,7 @@ export class GamificationComponent {
 
   /**
    * Renders the daily challenge items and completion triggers.
+   * @param {Object} state - Current application state
    */
   renderChallenges(state) {
     if (!this.challengesContainer) return;
@@ -39,6 +40,7 @@ export class GamificationComponent {
       
       const card = document.createElement('div');
       card.className = 'challenge-item-card';
+      card.setAttribute('role', 'listitem');
 
       const details = document.createElement('div');
       details.className = 'challenge-details';
@@ -66,11 +68,15 @@ export class GamificationComponent {
         btn.className = 'btn-claim';
         btn.disabled = true;
         btn.textContent = '✅ Completed';
+        btn.setAttribute('aria-label', `${ch.title} — already completed`);
+        btn.setAttribute('aria-pressed', 'true');
       } else if (isActive) {
         btn.className = 'btn-action';
         btn.style.borderColor = 'var(--color-warning)';
         btn.style.color = 'var(--color-warning)';
         btn.textContent = 'Complete';
+        btn.setAttribute('aria-label', `Complete challenge: ${ch.title}`);
+        btn.setAttribute('aria-pressed', 'false');
         btn.onclick = () => {
           store.completeChallenge(ch.id, ch.points);
           this.triggerBotChallengeNotification(ch);
@@ -78,6 +84,8 @@ export class GamificationComponent {
       } else {
         btn.className = 'btn-action';
         btn.textContent = 'Join';
+        btn.setAttribute('aria-label', `Join challenge: ${ch.title}`);
+        btn.setAttribute('aria-pressed', 'false');
         btn.onclick = () => store.joinChallenge(ch.id);
       }
 
@@ -214,13 +222,26 @@ export class GamificationComponent {
 
   /**
    * Helper to append a congratulations card to the chat log upon challenge success.
+   * @param {Object} challenge - The completed challenge object from CHALLENGES
    */
   triggerBotChallengeNotification(challenge) {
     const chatHist = document.getElementById('chat-history');
     if (chatHist) {
       const msgDiv = document.createElement('div');
       msgDiv.className = 'chat-msg bot';
-      msgDiv.innerHTML = `<p>🏆 <strong>Challenge Completed!</strong> You successfully completed **${challenge.title}** and earned <strong>${challenge.points} Eco Points</strong>! Keep up the amazing work! 🎉</p>`;
+      msgDiv.setAttribute('role', 'status');
+      const p = document.createElement('p');
+      // Build content safely using DOM text nodes to avoid XSS
+      p.appendChild(document.createTextNode('🏆 '));
+      const strong1 = document.createElement('strong');
+      strong1.textContent = 'Challenge Completed!';
+      p.appendChild(strong1);
+      p.appendChild(document.createTextNode(` You successfully completed "${challenge.title}" and earned `));
+      const strong2 = document.createElement('strong');
+      strong2.textContent = `${challenge.points} Eco Points`;
+      p.appendChild(strong2);
+      p.appendChild(document.createTextNode('! Keep up the amazing work! 🎉'));
+      msgDiv.appendChild(p);
       chatHist.appendChild(msgDiv);
       chatHist.scrollTop = chatHist.scrollHeight;
     }

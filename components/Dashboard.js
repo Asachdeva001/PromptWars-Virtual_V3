@@ -5,6 +5,7 @@
 
 import { store } from '../state.js';
 import { BENCHMARKS } from '../data.js';
+import { GAUGE_CIRCUMFERENCE, GAUGE_WARN_PCT, GAUGE_DANGER_PCT } from '../constants.js';
 
 export class DashboardComponent {
   constructor() {
@@ -24,6 +25,7 @@ export class DashboardComponent {
     
     this.benchmarkContainer = document.getElementById('benchmark-chart');
     this.logsTableBody = document.getElementById('logs-list-body');
+    this.insightsContainer = document.getElementById('dashboard-insights');
     
     // Subscribe to State Changes
     store.subscribe((state) => this.render(state));
@@ -57,18 +59,16 @@ export class DashboardComponent {
     totalCarbon = parseFloat(totalCarbon.toFixed(1));
 
     // 2. Render Carbon Score Gauge
-    // Circumference of our circle is 2 * PI * r = 2 * 3.14159 * 90 = 565.48
-    const maxCircumference = 565.48;
-    // Map total carbon to percentage of goal (min 0%, max 100%)
+    // Uses GAUGE_CIRCUMFERENCE constant (2 × π × 90 ≈ 565.48)
     const pct = Math.min((totalCarbon / goal) * 100, 100);
-    const strokeDashoffset = maxCircumference - (pct / 100) * maxCircumference;
+    const strokeDashoffset = GAUGE_CIRCUMFERENCE - (pct / 100) * GAUGE_CIRCUMFERENCE;
     
     if (this.gaugeFill) {
       this.gaugeFill.style.strokeDashoffset = strokeDashoffset;
-      // Change gauge color warning/danger as budget fills
-      if (pct > 90) {
+      // Change gauge colour: warning amber → danger red as budget fills
+      if (pct > GAUGE_DANGER_PCT) {
         this.gaugeFill.style.stroke = 'var(--color-danger)';
-      } else if (pct > 75) {
+      } else if (pct > GAUGE_WARN_PCT) {
         this.gaugeFill.style.stroke = 'var(--color-warning)';
       } else {
         this.gaugeFill.style.stroke = 'url(#gauge-gradient)';
@@ -199,7 +199,7 @@ export class DashboardComponent {
         
         // Description cell
         const tdDesc = document.createElement('td');
-        const descText = log.notes || `${log.subcategory.replace('-', ' ')} (${log.rawValue})`;
+        const descText = log.notes || `${log.subcategory.replace(/-/g, ' ')} (${log.rawValue})`;
         tdDesc.textContent = descText;
         tr.appendChild(tdDesc);
         
@@ -226,6 +226,88 @@ export class DashboardComponent {
         
         this.logsTableBody.appendChild(tr);
       });
+    }
+
+    // 6. Render Personalised Insights
+    this.renderInsights(categorySums, totalCarbon, goal);
+  }
+
+  /**
+   * Renders actionable personalised reduction tips based on the user's top emission category.
+   * @param {Object} categorySums - Summed emissions per category { travel, energy, diet, shopping }
+   * @param {number} totalCarbon - Total logged emissions in kg CO2e
+   * @param {number} goal - User's annual carbon budget in kg CO2e
+   */
+  renderInsights(categorySums, totalCarbon, goal) {
+    if (!this.insightsContainer) return;
+    this.insightsContainer.innerHTML = '';
+
+    if (totalCarbon === 0) {
+      this.insightsContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">Start logging activities to receive personalised reduction tips.</p>';
+      return;
+    }
+
+    // Identify the highest-emission category
+    const topCategory = Object.entries(categorySums).reduce(
+      (max, [cat, val]) => (val > max.val ? { cat, val } : max),
+      { cat: 'none', val: 0 }
+    );
+
+    /** Reduction tip map keyed by category */
+    const tips = {
+      travel: [
+        '🚆 Switching one weekly car commute to public transport can cut your travel footprint by up to 70%.',
+        '🚴 Cycling or walking journeys under 3 km produces zero emissions and improves health.',
+        '🔋 Considering an EV for your next vehicle? Electric cars emit up to 70% less per km on green grids.'
+      ],
+      energy: [
+        '☀️ Switching to a green energy tariff reduces your electricity footprint by up to 95%.',
+        '🌡️ Lowering your thermostat by 1 °C can reduce heating energy use by ~10%.',
+        '💡 Replacing old incandescent bulbs with LEDs saves up to 85% lighting energy.'
+      ],
+      diet: [
+        '🥗 Reducing beef intake by one serving per week can save over 360 kg CO2e per year.',
+        '🌱 Trying one vegan meal per day can cut your annual diet footprint by up to 50%.',
+        '🐟 Swapping red meat for fish or poultry halves the per-serving emissions.'
+      ],
+      shopping: [
+        '♻️ Buying second-hand clothing instead of new reduces the per-item carbon cost by up to 80%.',
+        '🛒 Avoiding fast fashion and choosing certified organic or recycled materials reduces lifecycle impact.',
+        '📦 Consolidating purchases into fewer orders reduces packaging and shipping emissions.'
+      ]
+    };
+
+    const categoryTips = tips[topCategory.cat] || [];
+    const pct = ((topCategory.val / totalCarbon) * 100).toFixed(0);
+
+    const heading = document.createElement('p');
+    heading.style.cssText = 'font-weight:600; margin-bottom:10px; font-size:0.95rem;';
+    heading.textContent = `Your biggest contributor is ${topCategory.cat} (${pct}% of total). Here are some targeted tips:`;
+    this.insightsContainer.appendChild(heading);
+
+    const list = document.createElement('ul');
+    list.style.cssText = 'list-style:none; padding:0; display:flex; flex-direction:column; gap:8px;';
+
+    categoryTips.forEach(tip => {
+      const li = document.createElement('li');
+      li.style.cssText = 'font-size:0.875rem; color:var(--text-muted); padding: 8px 12px; background: rgba(16,185,129,0.06); border-left: 3px solid var(--color-primary); border-radius: 4px;';
+      li.textContent = tip;
+      list.appendChild(li);
+    });
+    this.insightsContainer.appendChild(list);
+
+    // Progress note
+    if (totalCarbon < goal) {
+      const budgetLeft = (goal - totalCarbon).toFixed(0);
+      const note = document.createElement('p');
+      note.style.cssText = 'margin-top:12px; font-size:0.8rem; color:var(--color-primary);';
+      note.textContent = `✅ You still have ${Number(budgetLeft).toLocaleString()} kg CO2e of your annual budget remaining — great work!`;
+      this.insightsContainer.appendChild(note);
+    } else {
+      const note = document.createElement('p');
+      note.style.cssText = 'margin-top:12px; font-size:0.8rem; color:var(--color-danger);';
+      note.textContent = `⚠️ You have exceeded your annual carbon budget. Focus on reducing your ${topCategory.cat} activities first.`;
+      this.insightsContainer.appendChild(note);
     }
   }
 }
