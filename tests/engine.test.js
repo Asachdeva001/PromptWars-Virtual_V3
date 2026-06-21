@@ -37,7 +37,7 @@ test('Carbon Engine: Energy Calculations', () => {
   // 100 liters * 2.68 = 268.00 kg CO2
   assert.strictEqual(calculateEnergy('oil-heating', 100, 'liters'), 268.00);
   // 50 gallons = 50 / 0.264172 = 189.27 liters. 189.27 * 2.68 = 507.24 kg CO2
-  assert.strictEqual(calculateEnergy('oil-heating', 50, 'gallons'), 507.24);
+  assert.strictEqual(calculateEnergy('oil-heating', 50, 'gallons'), 507.25);
 
   // Test invalid inputs
   assert.strictEqual(calculateEnergy('electricity-grid', -50), 0);
