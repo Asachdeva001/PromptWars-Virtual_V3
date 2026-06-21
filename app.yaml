@@ -1,0 +1,33 @@
+runtime: python39
+instance_class: F1
+
+handlers:
+  # Route root URL to index.html
+  - url: /
+    static_files: index.html
+    upload: index.html
+    secure: always
+
+  # Route component scripts
+  - url: /components/(.*)
+    static_files: components/\1
+    upload: components/(.*)
+    secure: always
+
+  # Route test files
+  - url: /tests/(.*)
+    static_files: tests/\1
+    upload: tests/(.*)
+    secure: always
+
+  # Route all other root files (index.css, main.js, state.js, engine.js, parser.js, data.js)
+  - url: /(.*\.(js|css|json|md|txt|ico|png|svg|jpg))$
+    static_files: \1
+    upload: .*\.(js|css|json|md|txt|ico|png|svg|jpg)$
+    secure: always
+
+  # Fallback routing to index.html for Single Page Application
+  - url: /.*
+    static_files: index.html
+    upload: index.html
+    secure: always
